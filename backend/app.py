@@ -21,7 +21,7 @@ from reportlab.lib.units import inch
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-#Skills Section Titles
+#Skills Section Titles ADd
 SECTION_TITLES = {
     "professional summary",
     "summary",
