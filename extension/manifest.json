@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Form to Flask",
+  "version": "1.0",
+  "description": "Send form data to Flask backend and display results",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

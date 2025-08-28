@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Candidate Form</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h3>Submit Details</h3>
+  <form id="dataForm">
+    <label>Job Description:</label><br>
+    <textarea id="job_desc" name="job_desc" rows="4" required></textarea><br><br>
+
+    <label>Candidate Information:</label><br>
+    <textarea id="candidate_info" name="candidate_info" rows="4" required></textarea><br><br>
+
+    <label>GPT API Token:</label><br>
+    <input type="text" id="gpt_token" name="gpt_token" placeholder="Enter your API token" required><br><br>
+
+    <label>File Format:</label><br>
+    <select id="file_type" name="file_type" required>
+      <option value="word">Word (.docx)</option>
+      <option value="pdf">PDF (.pdf)</option>
+    </select><br><br>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <div id="response"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
