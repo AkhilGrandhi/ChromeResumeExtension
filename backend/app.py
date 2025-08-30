@@ -4,6 +4,7 @@ from openai import OpenAI
 from io import BytesIO
 import re
 import traceback
+import os
 
 # ------- Word (python-docx) -------
 from docx import Document
