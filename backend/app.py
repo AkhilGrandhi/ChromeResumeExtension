@@ -21,6 +21,8 @@ from reportlab.lib.units import inch
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 @app.route("/", methods=["GET"])
 def home():
     return "Resume Automation API is live 🚀. Use /submit with POST."
@@ -414,7 +416,7 @@ def submit():
         return jsonify({"message": "Missing required fields"}), 400
 
     try:
-        client = OpenAI(api_key="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")
+        client = OpenAI(api_key=OPENAI_API_KEY)
         prompt = f"""
         You are a professional resume writer. Using the Job Description and Candidate Information provided below, generate a clean, ATS-optimized resume that strictly follows the section order and formatting rules listed here:
 
