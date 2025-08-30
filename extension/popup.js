@@ -9,7 +9,7 @@ document.getElementById("dataForm").addEventListener("submit", async function(e)
     document.getElementById("response").innerText = "Generating resume...";
 
     try {
-        let res = await fetch("http://127.0.0.1:5000/submit", {
+        let res = await fetch("https://resume-automation-ylxh.onrender.com/submit", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             // body: JSON.stringify({ job_desc, candidate_info, gpt_token, file_type })
