@@ -149,9 +149,8 @@ def create_resume_word(content: str) -> Document:
     #     "Version Control", "Operating Systems"
     # ]
 
-    skill_categories =  [
+    skill_categories = [
     # Programming & Development
-    "Programming Languages",
     "Back-End Development Frameworks",
     "Front-End Technologies",
     "JavaScript Frameworks & Libraries",
@@ -169,27 +168,25 @@ def create_resume_word(content: str) -> Document:
     "Hybrid & Multi-Cloud Architectures",
 
     # DevOps, CI/CD & Automation
-    "CI/CD Tools",
-    "DevOps Tools & Practices",
-    "Infrastructure as Code",
+    "Infrastructure as Code (IaC)",
     "Configuration Management Tools",
     "Containerization & Orchestration",
     "Monitoring & Observability Tools",
     "Scripting & Automation",
+    "Microservices & Patterns",
 
     # Data & Analytics
     "Big Data Ecosystems",
     "ETL & Data Integration Tools",
     "Data Warehousing Solutions",
-    "Database Management Systems",
+    "Database Management Systems (DBMS)",
     "Data Lake & Lakehouse Technologies",
     "Data Modeling & Architecture",
     "Data Governance & Lineage",
 
     # AI, ML & Data Science
     "Machine Learning Frameworks",
-    "Natural Language Processing",
-    "Computer Vision",
+    "Natural Language Processing (NLP)",
     "Model Training & Deployment",
     "AI/ML Ops Tools",
     "Data Science Tools",
@@ -200,11 +197,12 @@ def create_resume_word(content: str) -> Document:
     "Cloud Security",
     "Network Security",
     "Application Security",
-    "Identity & Access Management",
-    "Security Information and Event Management",
+    "Identity & Access Management (IAM)",
+    "Security Information and Event Management (SIEM)",
     "Penetration Testing & Ethical Hacking",
 
     # Testing & Quality Assurance
+    "Testing & QA Tools",
     "Automated Testing Tools",
     "Performance Testing Tools",
     "Test Management Tools",
@@ -213,32 +211,39 @@ def create_resume_word(content: str) -> Document:
     "QA Processes & Methodologies",
 
     # UI/UX & Design
+    "UI/UX & Design Tools",
     "UI/UX Design Tools",
     "Wireframing & Prototyping Tools",
     "Design Systems & Pattern Libraries",
     "User Research & Usability Testing",
 
-    # Digital Productivity & IDEs
-    "Version Control Systems",
-    "Integrated Development Environments",
+    # Collaboration & Productivity
+    "Collaboration & Productivity Tools",
+
+    # Development Environment & Productivity
+    "Integrated Development Environments (IDEs)",
     "Code Collaboration Tools",
     "Task & Issue Tracking Tools",
-    "Documentation Tools",
 
-    # Operating Systems & Platforms
-    "Operating Systems",
+    # OS & Virtualization
     "Virtualization Tools",
     "Desktop & Server Administration",
 
-    # Emerging & Specialized Technologies
+    # Emerging & Specialized Tech
     "Blockchain Development",
     "IoT Development & Platforms",
     "Edge Computing",
-    "Augmented Reality / Virtual Reality",
-    "Quantum Computing Fundamentals"
+    "Augmented Reality (AR) / Virtual Reality (VR)",
+    "Quantum Computing Fundamentals",
+
+    # Mandatory Categories (always included if relevant)
+    "Programming Languages",
+    "Documentation Tools",
+    "Operating Systems",
+    "DevOps & CI/CD Tools",
+    "Version Control Systems",
+    "Development Tools"
     ]
-
-
 
     while idx < len(lines):
         line = lines[idx]
@@ -389,7 +394,6 @@ def submit():
         2. **SKILLS** – Based on the Job Description and Candidate Information, extract the most relevant technical and functional skills, tools, platforms, and technologies. Then organize them into **8 to 12 skill categories**, strictly selected from the list below. 
         ⚠️ You must assign each technology to the correct category only. Do not mix unrelated tools into the wrong category. Do not invent new categories. Do not include Reporting/Analytics tools under CI/CD or any unrelated grouping.
 
-            - Programming Languages
             - Back-End Development Frameworks
             - Front-End Technologies
             - JavaScript Frameworks & Libraries
@@ -405,25 +409,23 @@ def submit():
             - Google Cloud Services
             - Hybrid & Multi-Cloud Architectures
 
-            - CI/CD Tools
-            - DevOps Tools & Practices
-            - Infrastructure as Code
+            - Infrastructure as Code (IaC)
             - Configuration Management Tools
             - Containerization & Orchestration
             - Monitoring & Observability Tools
             - Scripting & Automation
+            - Microservices & Patterns
 
             - Big Data Ecosystems
             - ETL & Data Integration Tools
             - Data Warehousing Solutions
-            - Database Management Systems
+            - Database Management Systems (DBMS)
             - Data Lake & Lakehouse Technologies
             - Data Modeling & Architecture
             - Data Governance & Lineage
 
             - Machine Learning Frameworks
-            - Natural Language Processing
-            - Computer Vision
+            - Natural Language Processing (NLP)
             - Model Training & Deployment
             - AI/ML Ops Tools
             - Data Science Tools
@@ -433,10 +435,11 @@ def submit():
             - Cloud Security
             - Network Security
             - Application Security
-            - Identity & Access Management
-            - Security Information and Event Management
+            - Identity & Access Management (IAM)
+            - Security Information & Event Management (SIEM)
             - Penetration Testing & Ethical Hacking
 
+            - Testing & QA Tools
             - Automated Testing Tools
             - Performance Testing Tools
             - Test Management Tools
@@ -444,45 +447,57 @@ def submit():
             - Unit & Integration Testing Frameworks
             - QA Processes & Methodologies
 
+            - UI/UX & Design Tools
             - UI/UX Design Tools
             - Wireframing & Prototyping Tools
             - Design Systems & Pattern Libraries
             - User Research & Usability Testing
 
-            - Version Control Systems
-            - Integrated Development Environments
+            - Collaboration & Productivity Tools
+
+            - Integrated Development Environments (IDEs)
             - Code Collaboration Tools
             - Task & Issue Tracking Tools
-            - Documentation Tools
 
-            - Operating Systems
             - Virtualization Tools
             - Desktop & Server Administration
-
             - Blockchain Development
             - IoT Development & Platforms
             - Edge Computing
-            - Augmented Reality / Virtual Reality
+            - Augmented Reality (AR) / Virtual Reality (VR)
             - Quantum Computing Fundamentals
+
+            Mandatory Categories (always include these):
+
+            - Programming Languages: C, C++, Java, Python, HTML/CSS, SQL, PL/SQL, T-SQL, NoSQL, JavaScript, TypeScript, C#, Ruby, PHP, Swift, Kotlin, R, Go, Rust, Bash/Shell Scripting, PowerShell, MATLAB, Scala, Perl, Dart, Objective-C, VBA
+
+            - Documentation Tools: Confluence, Notion, Microsoft Word, Google Docs, Markdown, LaTeX
+
+            - Operating Systems: Windows, Linux, macOS, Unix, Ubuntu, Red Hat, CentOS
+
+            - DevOps & CI/CD Tools: GitHub Actions, Bitbucket Pipelines, Jenkins, Azure DevOps, GitLab CI/CD, CircleCI, Travis CI, TeamCity
+
+            - Version Control Systems: Git, GitHub, GitLab, Bitbucket, Subversion (SVN), Perforce
+
+            - Development Tools: Visual Studio Code, IntelliJ IDEA, Eclipse, PyCharm, Android Studio, Xcode, NetBeans, Sublime Text, Atom
 
         ⚠️ MANDATORY RULES:
         - Select between **8 to 12 categories** based on the job’s focus (e.g., Java Developer, React Front-End, Data Engineer, DevOps, etc.).
         - **Always show categories in a logical and relevant order** for the job role — prioritize core skills first (e.g., Programming Languages before Tools).
         - If a category is not explicitly mentioned in the JD but clearly relevant to the role, you may include it.
         - Do **not** include categories that are unrelated to the JD.
+        - Add Mandatory Categories (always include these) at the end of the Skills section as appropriate.
+        - Each category must contain **a minimum of 6 skills** and **a maximum of 8–12 skills**, including **both primary skills and relevant sub-skills** where applicable.
+        - Include closely related or equivalent technologies even if not explicitly mentioned (e.g., if JD mentions AWS, also add Azure equivalents if applicable).
+        - Ensure that all technologies listed in this section are also reflected in the **Technologies Used** lines under the WORK EXPERIENCE section.
         - Each category must contain **a minimum of 6 skills** and **a maximum of 8–12 skills**, including **both primary skills and relevant sub-skills** where applicable. For example:
         Spring Framework (Spring Boot, Spring Data, Spring MVC) or
         React.js (Hooks, Context API, Redux)
-        - Include closely related or equivalent technologies even if not explicitly mentioned (e.g., if JD mentions AWS, also add Azure equivalents if applicable).
-        - Ensure that all technologies listed in this section are also reflected in the **Technologies Used** lines under the WORK EXPERIENCE section.
-
 
         3. **WORK EXPERIENCE** – Merge **Work History** and **Work Experience** into a unified section. For each job role:
             - Include the Job Title, Company Name (bold), Job Location, and timeline using the format:
-                ```
                 [Company Name] – [Job Location]  
                 [Job Title] – [Start Month Year] to [End Month Year]
-                ```
             - Add **10 to 15 detailed bullet points** per role describing responsibilities, accomplishments, and impact using strong, action-oriented language.
             - Ensure the **total number of bullet points across all roles is between 35 and 45**.
             - End each job section with a line:  
@@ -512,6 +527,9 @@ def submit():
         CANDIDATE INFORMATION:
         {candidate_info}
         """
+
+
+
 
 
 
