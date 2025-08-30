@@ -528,7 +528,8 @@ def submit():
                 [Company Name] – [Job Location]  
                 [Job Title] – [Start Month Year] to [End Month Year]
             - Add **10 to 15 high-impact bullet points** per role. Each bullet must:
-                ⚠️ IMPORTANT: Include a minimum of 10 bullet points for each role.
+                ⚠️ IMPORTANT: Include a minimum of 15 bullet points for each role.
+                - Start every bullet line with "- " (hyphen + space).
                 - Start with a strong action verb (e.g., Spearheaded, Engineered, Optimized, Automated, Delivered).
                 - Emphasize **achievements, measurable outcomes, and business value** rather than just responsibilities.
                 - Include **quantifiable results** wherever possible (e.g., improved ETL performance by 35%, reduced deployment time by 40%, cut costs by 20% annually).
@@ -542,6 +543,7 @@ def submit():
                 ⚠️ When combining all roles, the **union of technologies must comprehensively cover the entire SKILLS section**.
 
             ⚠️ IMPORTANT: Ensure the resume length is at least **two full pages**.
+
 
         4. **CERTIFICATIONS**
 
