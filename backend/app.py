@@ -93,7 +93,7 @@ def create_resume_word(content: str) -> Document:
 
     lines = [str(ln).strip("• ").strip() for ln in content.splitlines() if ln and str(ln).strip()]
     idx = 0
-    print("Lines",lines)
+    # print("Lines",lines)
     # Candidate Name
     if idx < len(lines):
         name_para = doc.add_paragraph(lines[idx])
@@ -151,6 +151,8 @@ def create_resume_word(content: str) -> Document:
 
     skill_categories = [
     # Programming & Development
+    "Data Engineering Technologies",
+    "Data Engineering Tools",
     "Back-End Development Frameworks",
     "Front-End Technologies",
     "JavaScript Frameworks & Libraries",
@@ -448,6 +450,8 @@ def submit():
             - Data Lake & Lakehouse Technologies
             - Data Modeling & Architecture
             - Data Governance & Lineage
+            - Data Engineering Tools
+            - Data Engineering Technologies
 
             - Machine Learning Frameworks
             - Natural Language Processing (NLP)
@@ -523,12 +527,19 @@ def submit():
             - Include the Job Title, Company Name (bold), Job Location, and timeline using the format:
                 [Company Name] – [Job Location]  
                 [Job Title] – [Start Month Year] to [End Month Year]
-            - Add **10 to 15 detailed bullet points** per role describing responsibilities, accomplishments, and impact using strong, action-oriented language.
+            - Add **10 to 15 high-impact bullet points** per role. Each bullet must:
+                ⚠️ IMPORTANT: Include a minimum of 10 bullet points for each role.
+                - Start with a strong action verb (e.g., Spearheaded, Engineered, Optimized, Automated, Delivered).
+                - Emphasize **achievements, measurable outcomes, and business value** rather than just responsibilities.
+                - Include **quantifiable results** wherever possible (e.g., improved ETL performance by 35%, reduced deployment time by 40%, cut costs by 20% annually).
+                - Highlight **leadership, innovation, automation, and cross-functional collaboration**.
+                - Showcase **modern practices** (e.g., Cloud Migration, DevOps, CI/CD automation, Data Engineering, AI/ML, Security, Scalability).
+                - Ensure all points are **specific, technical, and results-driven**, not generic.
             - Ensure the **total number of bullet points across all roles is between 35 and 45**.
             - End each job section with a line:  
                 **Technologies Used:** tech1, tech2, ..., tech15  
-                ⚠️ Include **a minimum of 10 to 15 technologies** per role, selected from the SKILLS section.  
-                When taking the union of all "Technologies Used" across all roles, the list must **comprehensively cover the entire Skills section**.
+                ⚠️ Each role must include **10 to 15 technologies** mapped directly from the SKILLS section.  
+                ⚠️ When combining all roles, the **union of technologies must comprehensively cover the entire SKILLS section**.
 
             ⚠️ IMPORTANT: Ensure the resume length is at least **two full pages**.
 
