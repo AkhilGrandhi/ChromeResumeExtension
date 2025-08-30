@@ -4,6 +4,9 @@
   "version": "1.0",
   "description": "Send form data to Flask backend and display results",
   "permissions": ["activeTab", "scripting"],
+  "host_permissions": [
+    "https://resume-automation-ylxh.onrender.com/*"
+  ],
   "action": {
     "default_popup": "popup.html"
   }
