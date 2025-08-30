@@ -399,16 +399,18 @@ def submit():
     except Exception:
         return jsonify({"message": "Invalid JSON"}), 400
 
+       
+    # ---- Replace this section in submit() ----
     job_desc = (data or {}).get("job_desc", "").strip()
     candidate_info = (data or {}).get("candidate_info", "").strip()
-    gpt_token = (data or {}).get("gpt_token", "").strip()
+    # gpt_token = (data or {}).get("gpt_token", "").strip()   # REMOVE THIS
     file_type = (data or {}).get("file_type", "word").strip().lower()
 
-    if not job_desc or not candidate_info or not gpt_token:
+    if not job_desc or not candidate_info:
         return jsonify({"message": "Missing required fields"}), 400
 
     try:
-        client = OpenAI(api_key=gpt_token)
+        client = OpenAI(api_key="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")
         prompt = f"""
         You are a professional resume writer. Using the Job Description and Candidate Information provided below, generate a clean, ATS-optimized resume that strictly follows the section order and formatting rules listed here:
 
