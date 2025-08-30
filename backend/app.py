@@ -258,15 +258,38 @@ def create_resume_word(content: str) -> Document:
             idx += 1
             continue
 
-        # Skill Categories
-        if any(line.startswith(cat) for cat in skill_categories):
-            category = line.strip()
+        # Skill Categories (case-insensitive; supports "Category: a, b" on same line)
+        line_no_bullet = re.sub(r'^\s*-\s*', '', line).strip()   # tolerate a leading "- "
+        head, sep, tail = line_no_bullet.partition(':')          # split on first ":"
+        candidate_title = head.strip()
+        is_cat = any(candidate_title.lower() == cat.lower() for cat in skill_categories)
+
+        if is_cat:
+            # preserve canonical casing from your list
+            category = next(cat for cat in skill_categories if cat.lower() == candidate_title.lower())
+
+            # start with any inline skills on the same line (right side of the first ":")
             skills = []
+            inline = tail.strip().rstrip(':').strip()            # remove accidental trailing ":"
+            if inline:
+                skills.extend([s.strip() for s in inline.split(',') if s.strip()])
+
             idx += 1
-            while idx < len(lines) and not is_section_title(lines[idx]) and not any(lines[idx].startswith(cat) for cat in skill_categories):
-                skills.append(lines[idx].lstrip("-• ").strip())
+
+            # gather following lines until the next section or another category
+            while idx < len(lines):
+                nxt = lines[idx]
+                nxt_no_bullet = re.sub(r'^\s*-\s*', '', nxt).strip()
+                nxt_head, nxt_sep, _ = nxt_no_bullet.partition(':')
+                nxt_title = nxt_head.strip()
+
+                if is_section_title(nxt_no_bullet) or any(nxt_title.lower() == c.lower() for c in skill_categories):
+                    break
+
+                skills.append(nxt.lstrip("-• ").strip().rstrip(':'))
                 idx += 1
 
+            # render: only the category label is bold; values are normal
             p = doc.add_paragraph()
             r1 = p.add_run(category + ": ")
             r1.bold = True
@@ -274,6 +297,8 @@ def create_resume_word(content: str) -> Document:
             r2 = p.add_run(", ".join(skills))
             r2.font.size = Pt(11)
             continue
+
+
 
         # Technologies Used (only heading bold)
         if line.startswith("Technologies Used"):
