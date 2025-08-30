@@ -21,6 +21,10 @@ from reportlab.lib.units import inch
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+@app.route("/", methods=["GET"])
+def home():
+    return "Resume Automation API is live 🚀. Use /submit with POST."
+
 #Skills Section Titles ADd
 SECTION_TITLES = {
     "professional summary",
@@ -617,6 +621,6 @@ def submit():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
 
 
