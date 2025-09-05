@@ -28,7 +28,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 def home():
     return "Resume Automation API is live 🚀. Use /submit with POST."
 
-#Skills Section Titles ADd
+# ---- Section detection ----
 SECTION_TITLES = {
     "professional summary",
     "summary",
@@ -82,26 +82,8 @@ def add_horizontal_rule(paragraph):
     pBdr.append(bottom)
     pPr.append(pBdr)
 
-def create_resume_word(content: str) -> Document:
-    doc = Document()
-
-    # Margins
-    for section in doc.sections:
-        section.top_margin = Inches(0.5)
-        section.bottom_margin = Inches(0.5)
-        section.left_margin = Inches(0.5)
-        section.right_margin = Inches(0.5)
-
-    # Default font
-    style = doc.styles['Normal']
-    font = style.font
-    font.name = 'Calibri'
-    font.size = Pt(11)
-
-    lines = [str(ln).strip("• ").strip() for ln in content.splitlines() if ln and str(ln).strip()]
-    idx = 0
-    # print("Lines",lines)
-    # Candidate Name
+# ---- Word building helpers ----
+def add_candidate_name(doc, lines, idx):
     if idx < len(lines):
         name_para = doc.add_paragraph(lines[idx])
         name_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
@@ -109,27 +91,21 @@ def create_resume_word(content: str) -> Document:
         run.bold = True
         run.font.size = Pt(20)
         idx += 1
+    return idx
 
-        # Email + Phone + Location (always formatted as "Email: ... | Mobile: ... | Location: ...")
+def add_contact_info(doc, lines, idx):
     contact_email, contact_phone, contact_location = "", "", ""
     while idx < len(lines) and is_contact_line(lines[idx]):
         line = lines[idx]
-
-        # Extract email
         email_match = re.search(r"[\w\.-]+@[\w\.-]+", line)
         if email_match:
             contact_email = email_match.group(0)
-
-        # Extract phone (10+ digits)
         phone_match = re.search(r"(\+?\d[\d\s\-]{8,}\d)", line)
         if phone_match:
             contact_phone = phone_match.group(0).strip()
-
-        # Extract location (after "Location:" or last segment if present)
         loc_match = re.search(r"Location\s*[:\-]?\s*(.*)", line, re.IGNORECASE)
         if loc_match:
             contact_location = loc_match.group(1).strip()
-
         idx += 1
 
     if contact_email or contact_phone or contact_location:
@@ -141,206 +117,193 @@ def create_resume_word(content: str) -> Document:
         if contact_location:
             pieces.append(f"Location: {contact_location}")
         contact_line = "  |  ".join(pieces)
-
         contact_para = doc.add_paragraph(contact_line)
         contact_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
         contact_para.runs[0].font.size = Pt(11)
 
+    return idx
 
+def add_section_title(doc, title, idx):
+    p = doc.add_paragraph(title.upper().rstrip(":"))
+    r = p.runs[0]
+    r.bold = True
+    r.font.size = Pt(11)
+    add_horizontal_rule(p)
+    return idx + 1
 
-    # # Body parsing
-    # skill_categories = [
-    #     "Programming Languages", "Cloud Platforms", "Big Data Ecosystems",
-    #     "Azure Services", "Database Management", "BI & Reporting Tools",
-    #     "ETL & Data Integration", "Orchestration & Automation",
-    #     "Version Control", "Operating Systems"
-    # ]
+def add_skills_section(doc, lines, idx):
+    idx = add_section_title(doc, lines[idx], idx)
+    category = None
+    skills = []
 
-    skill_categories = [
-    # Programming & Development
-    "Data Engineering Technologies",
-    "Data Engineering Tools",
-    "Back-End Development Frameworks",
-    "Front-End Technologies",
-    "JavaScript Frameworks & Libraries",
-    "Mobile App Development Frameworks",
-    "Cross-Platform Development",
-    "API Development & Integration",
-    "Web Development",
-    "Game Development Tools",
+    while idx < len(lines) and not is_section_title(lines[idx]):
+        line = lines[idx].strip()
 
-    # Cloud Computing & Platforms
-    "Cloud Platforms",
-    "Azure Services",
-    "AWS Services",
-    "Google Cloud Services",
-    "Hybrid & Multi-Cloud Architectures",
-
-    # DevOps, CI/CD & Automation
-    "Infrastructure as Code (IaC)",
-    "Configuration Management Tools",
-    "Containerization & Orchestration",
-    "Monitoring & Observability Tools",
-    "Scripting & Automation",
-    "Microservices & Patterns",
-
-    # Data & Analytics
-    "Big Data Ecosystems",
-    "ETL & Data Integration Tools",
-    "Data Warehousing Solutions",
-    "Database Management Systems (DBMS)",
-    "Data Lake & Lakehouse Technologies",
-    "Data Modeling & Architecture",
-    "Data Governance & Lineage",
-
-    # AI, ML & Data Science
-    "Machine Learning Frameworks",
-    "Natural Language Processing (NLP)",
-    "Model Training & Deployment",
-    "AI/ML Ops Tools",
-    "Data Science Tools",
-    "Statistical Analysis & Modeling",
-
-    # Cybersecurity & Compliance
-    "Security & Compliance Tools",
-    "Cloud Security",
-    "Network Security",
-    "Application Security",
-    "Identity & Access Management (IAM)",
-    "Security Information and Event Management (SIEM)",
-    "Penetration Testing & Ethical Hacking",
-
-    # Testing & Quality Assurance
-    "Testing & QA Tools",
-    "Automated Testing Tools",
-    "Performance Testing Tools",
-    "Test Management Tools",
-    "API Testing Tools",
-    "Unit & Integration Testing Frameworks",
-    "QA Processes & Methodologies",
-
-    # UI/UX & Design
-    "UI/UX & Design Tools",
-    "UI/UX Design Tools",
-    "Wireframing & Prototyping Tools",
-    "Design Systems & Pattern Libraries",
-    "User Research & Usability Testing",
-
-    # Collaboration & Productivity
-    "Collaboration & Productivity Tools",
-
-    # Development Environment & Productivity
-    "Integrated Development Environments (IDEs)",
-    "Code Collaboration Tools",
-    "Task & Issue Tracking Tools",
-
-    # OS & Virtualization
-    "Virtualization Tools",
-    "Desktop & Server Administration",
-
-    # Emerging & Specialized Tech
-    "Blockchain Development",
-    "IoT Development & Platforms",
-    "Edge Computing",
-    "Augmented Reality (AR) / Virtual Reality (VR)",
-    "Quantum Computing Fundamentals",
-
-    # Mandatory Categories (always included if relevant)
-    "Programming Languages",
-    "Documentation Tools",
-    "Operating Systems",
-    "DevOps & CI/CD Tools",
-    "Version Control Systems",
-    "Development Tools"
-    ]
-
-    while idx < len(lines):
-        line = lines[idx]
-
-        # Section Titles
-        if is_section_title(line):
-            p = doc.add_paragraph(line.upper().rstrip(":"))
-            r = p.runs[0]
-            r.bold = True
-            r.font.size = Pt(11)
-            add_horizontal_rule(p)
+        if not line:
             idx += 1
             continue
 
-        # Skill Categories (case-insensitive; supports "Category: a, b" on same line)
-        line_no_bullet = re.sub(r'^\s*-\s*', '', line).strip()   # tolerate a leading "- "
-        head, sep, tail = line_no_bullet.partition(':')          # split on first ":"
-        candidate_title = head.strip()
-        is_cat = any(candidate_title.lower() == cat.lower() for cat in skill_categories)
-
-        if is_cat:
-            # preserve canonical casing from your list
-            category = next(cat for cat in skill_categories if cat.lower() == candidate_title.lower())
-
-            # start with any inline skills on the same line (right side of the first ":")
-            skills = []
-            inline = tail.strip().rstrip(':').strip()            # remove accidental trailing ":"
-            if inline:
-                skills.extend([s.strip() for s in inline.split(',') if s.strip()])
-
-            idx += 1
-
-            # gather following lines until the next section or another category
-            while idx < len(lines):
-                nxt = lines[idx]
-                nxt_no_bullet = re.sub(r'^\s*-\s*', '', nxt).strip()
-                nxt_head, nxt_sep, _ = nxt_no_bullet.partition(':')
-                nxt_title = nxt_head.strip()
-
-                if is_section_title(nxt_no_bullet) or any(nxt_title.lower() == c.lower() for c in skill_categories):
-                    break
-
-                skills.append(nxt.lstrip("-• ").strip().rstrip(':'))
-                idx += 1
-
-            # render: only the category label is bold; values are normal
+        # Case 1: Inline format (comma-separated skills, no "-")
+        if category and not line.startswith("-") and "," in line:
+            skills = [s.strip() for s in line.split(",") if s.strip()]
             p = doc.add_paragraph()
             r1 = p.add_run(category + ": ")
             r1.bold = True
-            r1.font.size = Pt(11)
             r2 = p.add_run(", ".join(skills))
-            r2.font.size = Pt(11)
-            continue
+            category, skills = None, []  # reset after flush
 
-
-
-        # Technologies Used (only heading bold)
-        if line.startswith("Technologies Used"):
-            if ":" in line:
-                heading, techs = line.split(":", 1)
+        # Case 2: New category line
+        elif not line.startswith("-"):
+            if category and skills:
                 p = doc.add_paragraph()
-                r1 = p.add_run(heading.strip() + ": ")
+                r1 = p.add_run(category + ": ")
                 r1.bold = True
-                r1.font.size = Pt(11)
-                r2 = p.add_run(techs.strip())  # not bold
-                r2.font.size = Pt(11)
-            else:
-                p = doc.add_paragraph()
-                r1 = p.add_run(line.strip())
-                r1.bold = True
-                r1.font.size = Pt(11)
-            idx += 1
-            continue
+                r2 = p.add_run(", ".join(skills))
+            category = line
+            skills = []
 
-        # Bullets
-        if line.startswith("- "):
+        # Case 3: Bulleted skill
+        else:
+            skills.append(line.lstrip("- ").strip())
+
+        idx += 1
+
+    # flush last category
+    if category and skills:
+        p = doc.add_paragraph()
+        r1 = p.add_run(category + ": ")
+        r1.bold = True
+        r2 = p.add_run(", ".join(skills))
+
+    return idx
+
+
+    # flush last category
+    if category and skills:
+        p = doc.add_paragraph()
+        r1 = p.add_run(category + ": ")
+        r1.bold = True
+        r2 = p.add_run(", ".join(skills))
+
+    return idx
+
+
+def add_experience_section(doc, lines, idx):
+    idx = add_section_title(doc, lines[idx], idx)
+    while idx < len(lines) and not is_section_title(lines[idx]):
+        line = lines[idx]
+        if " – " in line and ":" in line:
+            job_title, rest = line.split(":", 1)
+            p = doc.add_paragraph(job_title.strip())
+            p.runs[0].bold = True
+            parts = re.split(r'\.\s+|,\s+', rest)
+            for part in parts:
+                if part.strip():
+                    bullet_para = doc.add_paragraph(part.strip(), style="List Bullet")
+                    bullet_para.paragraph_format.left_indent = Inches(0.25)
+
+        elif line.startswith("Technologies Used"):
+            heading, _, techs = line.partition(":")
+            p = doc.add_paragraph()
+            r1 = p.add_run(heading.strip() + ": ")
+            r1.bold = True
+            p.add_run(techs.strip())
+
+        elif line.startswith("- "):
             bullet_para = doc.add_paragraph(line[2:].strip(), style="List Bullet")
             bullet_para.paragraph_format.left_indent = Inches(0.25)
+
+        else:
+            doc.add_paragraph(line)
+        idx += 1
+    return idx
+
+def add_certifications_section(doc, lines, idx):
+    idx = add_section_title(doc, lines[idx], idx)
+    while idx < len(lines) and not is_section_title(lines[idx]):
+        line = lines[idx].lstrip("- ").strip()   # ✅ remove leading "-"
+        if line:
+            doc.add_paragraph("• " + line)
+        idx += 1
+    return idx
+
+
+def add_education_section(doc, lines, idx):
+    idx = add_section_title(doc, lines[idx], idx)
+    while idx < len(lines) and not is_section_title(lines[idx]):
+        doc.add_paragraph(lines[idx])
+        idx += 1
+    return idx
+
+def add_summary_section(doc, lines, idx):
+    idx = add_section_title(doc, lines[idx], idx)  # add "PROFESSIONAL SUMMARY"
+    
+    while idx < len(lines) and not is_section_title(lines[idx]):
+        line = lines[idx].strip()
+        if not line:
             idx += 1
             continue
 
-        # Fallback: normal text
-        para = doc.add_paragraph(line)
+        # Always force bullet format (whether line starts with "- " or not)
+        if line.startswith("- "):
+            text = line[2:].strip()
+        else:
+            text = line
+
+        bullet_para = doc.add_paragraph(text, style="List Bullet")
+        bullet_para.paragraph_format.left_indent = Inches(0.25)
         idx += 1
+
+    return idx
+
+
+
+# ---- Main Word generator ----
+def create_resume_word(content: str) -> Document:
+    doc = Document()
+    for section in doc.sections:
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+
+    style = doc.styles['Normal']
+    font = style.font
+    font.name = 'Calibri'
+    font.size = Pt(11)
+
+    lines = [ln.strip("• ").strip() for ln in content.splitlines() if ln and str(ln).strip()]
+    idx = 0
+
+    # Candidate Name
+    idx = add_candidate_name(doc, lines, idx)
+
+    # Contact Info
+    idx = add_contact_info(doc, lines, idx)
+
+    # Sections
+    while idx < len(lines):
+        if is_section_title(lines[idx]):
+            section_key = lines[idx].strip().rstrip(":").lower()
+            if section_key in ("professional summary", "summary"):
+                idx = add_summary_section(doc, lines, idx)   # ✅ FIXED
+            elif section_key in ("skills", "technical skills"):
+                idx = add_skills_section(doc, lines, idx)
+            elif section_key in ("work experience", "professional experience"):
+                idx = add_experience_section(doc, lines, idx)
+            elif section_key == "certifications":
+                idx = add_certifications_section(doc, lines, idx)
+            elif section_key == "education":
+                idx = add_education_section(doc, lines, idx)
+            else:
+                idx = add_section_title(doc, lines[idx], idx)
+        else:
+            idx += 1
 
     return doc
 
 
+# ---- PDF generator ----
 def create_resume_pdf(content: str) -> BytesIO:
     buf = BytesIO()
     doc = SimpleDocTemplate(
@@ -399,6 +362,7 @@ def create_resume_pdf(content: str) -> BytesIO:
     buf.seek(0)
     return buf
 
+# ---- API endpoint ----
 @app.route("/submit", methods=["POST"])
 def submit():
     try:
@@ -406,11 +370,8 @@ def submit():
     except Exception:
         return jsonify({"message": "Invalid JSON"}), 400
 
-       
-    # ---- Replace this section in submit() ----
     job_desc = (data or {}).get("job_desc", "").strip()
     candidate_info = (data or {}).get("candidate_info", "").strip()
-    # gpt_token = (data or {}).get("gpt_token", "").strip()   # REMOVE THIS
     file_type = (data or {}).get("file_type", "word").strip().lower()
 
     if not job_desc or not candidate_info:
@@ -425,112 +386,46 @@ def submit():
 
         SECTION ORDER:
 
-        1. **PROFESSIONAL SUMMARY** – Include **6 to 8 concise bullet points** summarizing key skills, achievements, career highlights, and qualifications aligned with the job description.
+        1. **PROFESSIONAL SUMMARY** – Include **6 to 8 bullet points. Each must start with "- "** summarizing key skills, achievements, career highlights, and qualifications aligned with the job description.
 
-        2. **SKILLS** – Based on the Job Description and Candidate Information, extract the most relevant technical and functional skills, tools, platforms, and technologies. Then organize them into **8 to 12 skill categories**, strictly selected from the list below. 
-        ⚠️ You must assign each technology to the correct category only. Do not mix unrelated tools into the wrong category. Do not invent new categories. Do not include Reporting/Analytics tools under CI/CD or any unrelated grouping.
+        2. **SKILLS** – Based on the Job Description and Candidate Information:
 
-            - Back-End Development Frameworks
-            - Front-End Technologies
-            - JavaScript Frameworks & Libraries
-            - Mobile App Development Frameworks
-            - Cross-Platform Development
-            - API Development & Integration
-            - Web Development
-            - Game Development Tools
+            1. Identify the **most relevant role/position** (e.g., .NET Developer, Java Backend Engineer, Salesforce Developer, Data Engineer, DevOps Engineer).
+            2. Create a **resume-ready Skills section** with **10–12 subsections**, tailored to that role and the JD.
 
-            - Cloud Platforms
-            - Azure Services
-            - AWS Services
-            - Google Cloud Services
-            - Hybrid & Multi-Cloud Architectures
+            ⚠️ RULES:
+            - Subsections must be **category-based** and recruiter-friendly (e.g., Programming Languages, Frameworks & Libraries, Databases, Cloud Platforms, DevOps & CI/CD, Testing & QA, Security & Compliance, Monitoring & Observability, Collaboration Tools).
+            - Use concise, ATS-optimized, professional wording for subsection titles.
+            - Fill each subsection with **8–20 related technologies/tools**, directly matching the JD and candidate info.
+            - Where possible, **expand categories with specific services or tools** (e.g., list AWS services like EC2, S3, Glue, Lambda, CloudWatch — not just "AWS").
+            - Always mirror exact JD keywords (e.g., if JD says “GCP, Spark, BigQuery, Kafka” → those must appear under correct categories).
+            - Include versions where impactful (e.g., Java 11/17, .NET 6/7, Spring Boot 3.x, Hadoop 3.x).
+            - Do not invent irrelevant categories or mix unrelated technologies into the wrong subsection.
+            - Always include these **mandatory baseline categories**, even if not explicitly in the JD:
+                - Programming Languages  
+                - Operating Systems  
+                - Cloud Platforms
+                - DevOps & CI/CD Tools  
+                - Development Tools                   
 
-            - Infrastructure as Code (IaC)
-            - Configuration Management Tools
-            - Containerization & Orchestration
-            - Monitoring & Observability Tools
-            - Scripting & Automation
-            - Microservices & Patterns
+            Example subsections (adjust dynamically per JD):  
+            - Programming Languages  
+            - Frameworks & Libraries  
+            - Databases & Data Warehousing  
+            - Big Data & Streaming  
+            - Cloud Platforms  
+            - DevOps & CI/CD Tools  
+            - Testing & QA  
+            - Security & Compliance  
+            - Monitoring & Observability  
+            - Collaboration Tools  
+            - Documentation Tools  
+            - Operating Systems  
 
-            - Big Data Ecosystems
-            - ETL & Data Integration Tools
-            - Data Warehousing Solutions
-            - Database Management Systems (DBMS)
-            - Data Lake & Lakehouse Technologies
-            - Data Modeling & Architecture
-            - Data Governance & Lineage
-            - Data Engineering Tools
-            - Data Engineering Technologies
+            ⚠️ Ensure each subsection is **fully loaded with at least 8 skills** and contains **16–20 skills where possible**.
+            ⚠️ All technologies listed here must also appear in the **Technologies Used** lines under the WORK EXPERIENCE section.
 
-            - Machine Learning Frameworks
-            - Natural Language Processing (NLP)
-            - Model Training & Deployment
-            - AI/ML Ops Tools
-            - Data Science Tools
-            - Statistical Analysis & Modeling
 
-            - Security & Compliance Tools
-            - Cloud Security
-            - Network Security
-            - Application Security
-            - Identity & Access Management (IAM)
-            - Security Information & Event Management (SIEM)
-            - Penetration Testing & Ethical Hacking
-
-            - Testing & QA Tools
-            - Automated Testing Tools
-            - Performance Testing Tools
-            - Test Management Tools
-            - API Testing Tools
-            - Unit & Integration Testing Frameworks
-            - QA Processes & Methodologies
-
-            - UI/UX & Design Tools
-            - UI/UX Design Tools
-            - Wireframing & Prototyping Tools
-            - Design Systems & Pattern Libraries
-            - User Research & Usability Testing
-
-            - Collaboration & Productivity Tools
-
-            - Integrated Development Environments (IDEs)
-            - Code Collaboration Tools
-            - Task & Issue Tracking Tools
-
-            - Virtualization Tools
-            - Desktop & Server Administration
-            - Blockchain Development
-            - IoT Development & Platforms
-            - Edge Computing
-            - Augmented Reality (AR) / Virtual Reality (VR)
-            - Quantum Computing Fundamentals
-
-            Mandatory Categories (always include these):
-
-            - Programming Languages: C, C++, Java, Python, HTML/CSS, SQL, PL/SQL, T-SQL, NoSQL, JavaScript, TypeScript, C#, Ruby, PHP, Swift, Kotlin, R, Go, Rust, Bash/Shell Scripting, PowerShell, MATLAB, Scala, Perl, Dart, Objective-C, VBA
-
-            - Documentation Tools: Confluence, Notion, Microsoft Word, Google Docs, Markdown, LaTeX
-
-            - Operating Systems: Windows, Linux, macOS, Unix, Ubuntu, Red Hat, CentOS
-
-            - DevOps & CI/CD Tools: GitHub Actions, Bitbucket Pipelines, Jenkins, Azure DevOps, GitLab CI/CD, CircleCI, Travis CI, TeamCity
-
-            - Version Control Systems: Git, GitHub, GitLab, Bitbucket, Subversion (SVN), Perforce
-
-            - Development Tools: Visual Studio Code, IntelliJ IDEA, Eclipse, PyCharm, Android Studio, Xcode, NetBeans, Sublime Text, Atom
-
-        ⚠️ MANDATORY RULES:
-        - Select between **8 to 12 categories** based on the job’s focus (e.g., Java Developer, React Front-End, Data Engineer, DevOps, etc.).
-        - **Always show categories in a logical and relevant order** for the job role — prioritize core skills first (e.g., Programming Languages before Tools).
-        - If a category is not explicitly mentioned in the JD but clearly relevant to the role, you may include it.
-        - Do **not** include categories that are unrelated to the JD.
-        - Add Mandatory Categories (always include these) at the end of the Skills section as appropriate.
-        - Each category must contain **a minimum of 6 skills** and **a maximum of 8–12 skills**, including **both primary skills and relevant sub-skills** where applicable.
-        - Include closely related or equivalent technologies even if not explicitly mentioned (e.g., if JD mentions AWS, also add Azure equivalents if applicable).
-        - Ensure that all technologies listed in this section are also reflected in the **Technologies Used** lines under the WORK EXPERIENCE section.
-        - Each category must contain **a minimum of 6 skills** and **a maximum of 8–12 skills**, including **both primary skills and relevant sub-skills** where applicable. For example:
-        Spring Framework (Spring Boot, Spring Data, Spring MVC) or
-        React.js (Hooks, Context API, Redux)
 
         3. **WORK EXPERIENCE** – Merge **Work History** and **Work Experience** into a unified section. For each job role:
             - Include the Job Title, Company Name (bold), Job Location, and timeline using the format:
@@ -574,12 +469,6 @@ def submit():
         CANDIDATE INFORMATION:
         {candidate_info}
         """
-
-
-
-
-
-
         resp = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -594,10 +483,9 @@ def submit():
         return jsonify({"message": f"OpenAI error: {e}"}), 500
 
     resume_text = clean_markdown(raw_resume).strip()
-    # print("==== Resume Text ====")
-    # print(resume_text)  # debug output
 
-    # 🚨 Prevent blank Word/PDF output
+    print("Generated Resume:\n", resume_text)
+
     if not resume_text:
         return jsonify({"message": "Resume generation failed: Empty response from AI"}), 500
 
@@ -622,8 +510,6 @@ def submit():
         traceback.print_exc()
         return jsonify({"message": f"File generation error: {e}"}), 500
 
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
-
-
+    app.run(host="0.0.0.0", port=5000, debug=True) # production
+    #app.run(host="127.0.0.1", port=5000, debug=True) # local testing
