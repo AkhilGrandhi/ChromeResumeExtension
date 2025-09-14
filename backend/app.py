@@ -198,17 +198,31 @@ def add_skills_section(doc, lines, idx):
 
 def add_experience_section(doc, lines, idx):
     idx = add_section_title(doc, lines[idx], idx)
+    company_seen = False  # track first company
     while idx < len(lines) and not is_section_title(lines[idx]):
         line = lines[idx]
+
         # ✅ Company – Location OR Role – Dates
         if " – " in line and ":" not in line:
-            p = doc.add_paragraph(line)
-            p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
-            run = p.runs[0]
-            run.bold = True
-            run.font.size = Pt(11)
+            if " to " in line:  # ✅ Role line
+                p = doc.add_paragraph(line)
+                run = p.runs[0]
+                run.bold = True
+                run.font.size = Pt(10)
+                # p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+                # ❌ No space above for role lines
+            else:  # ✅ Company line
+                p = doc.add_paragraph(line)
+                run = p.runs[0]
+                run.bold = True
+                run.font.size = Pt(11)
 
-        elif " – " in line and ":" in line:
+                # ✅ Add space above only for companies after the first one
+                if company_seen:
+                    p.paragraph_format.space_before = Pt(10)
+                company_seen = True
+
+        elif " – " in line and ":" in line:  # job + bullet description
             job_title, rest = line.split(":", 1)
             p = doc.add_paragraph(job_title.strip())
             p.runs[0].bold = True
@@ -224,15 +238,19 @@ def add_experience_section(doc, lines, idx):
             r1 = p.add_run(heading.strip() + ": ")
             r1.bold = True
             p.add_run(techs.strip())
+            # ✅ Only spacing below (no space above)
+            p.paragraph_format.space_after = Pt(10)
 
-        elif line.startswith("- "):
+        elif line.startswith("- "):  # bullets with -
             bullet_para = doc.add_paragraph(line[2:].strip(), style="List Bullet")
             bullet_para.paragraph_format.left_indent = Inches(0.25)
 
         else:
             doc.add_paragraph(line)
+
         idx += 1
     return idx
+
 
 def add_certifications_section(doc, lines, idx):
     idx = add_section_title(doc, lines[idx], idx)
@@ -539,4 +557,4 @@ def submit():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True) # production
-    # app.run(host="127.0.0.1", port=5000, debug=True) # local testing
+    #app.run(host="127.0.0.1", port=5000, debug=True) # local testing
