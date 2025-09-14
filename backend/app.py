@@ -12,6 +12,8 @@ from docx.shared import Pt, Inches
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+
 
 # ------- PDF (reportlab) -------
 from reportlab.lib.pagesizes import LETTER
@@ -123,13 +125,19 @@ def add_contact_info(doc, lines, idx):
 
     return idx
 
+
 def add_section_title(doc, title, idx):
     p = doc.add_paragraph(title.upper().rstrip(":"))
+    p.paragraph_format.space_before = Pt(12)   # add spacing above the title
+    p.paragraph_format.space_after = Pt(4)     # small space below (optional)
+
     r = p.runs[0]
     r.bold = True
-    r.font.size = Pt(11)
+    r.font.size = Pt(12)                       # set font size to 12
+
     add_horizontal_rule(p)
     return idx + 1
+
 
 def add_skills_section(doc, lines, idx):
     idx = add_section_title(doc, lines[idx], idx)
@@ -192,7 +200,15 @@ def add_experience_section(doc, lines, idx):
     idx = add_section_title(doc, lines[idx], idx)
     while idx < len(lines) and not is_section_title(lines[idx]):
         line = lines[idx]
-        if " – " in line and ":" in line:
+        # ✅ Company – Location OR Role – Dates
+        if " – " in line and ":" not in line:
+            p = doc.add_paragraph(line)
+            p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+            run = p.runs[0]
+            run.bold = True
+            run.font.size = Pt(11)
+
+        elif " – " in line and ":" in line:
             job_title, rest = line.split(":", 1)
             p = doc.add_paragraph(job_title.strip())
             p.runs[0].bold = True
@@ -271,6 +287,12 @@ def create_resume_word(content: str) -> Document:
     font = style.font
     font.name = 'Calibri'
     font.size = Pt(11)
+    # 👉 Add this block
+    para_format = style.paragraph_format
+    para_format.space_after = Pt(0)
+    para_format.space_before = Pt(0)
+    para_format.line_spacing = 1
+    para_format.alignment = WD_PARAGRAPH_ALIGNMENT.JUSTIFY
 
     lines = [ln.strip("• ").strip() for ln in content.splitlines() if ln and str(ln).strip()]
     idx = 0
@@ -484,10 +506,15 @@ def submit():
 
     resume_text = clean_markdown(raw_resume).strip()
 
-    print("Generated Resume:\n", resume_text)
+    # print("Generated Resume:\n", resume_text)
 
     if not resume_text:
         return jsonify({"message": "Resume generation failed: Empty response from AI"}), 500
+    
+    # ✅ Extract candidate name (first line of resume_text)
+    candidate_name = resume_text.splitlines()[0].strip()
+    safe_name = re.sub(r'[^A-Za-z0-9]+', '_', candidate_name)  # replace spaces & symbols
+    print("Candidate Name:", candidate_name, "-> Safe Name:", safe_name)
 
     try:
         if file_type == "word":
@@ -498,7 +525,7 @@ def submit():
             return send_file(
                 buffer,
                 as_attachment=True,
-                download_name="resume.docx",
+                download_name = safe_name + "_resume.docx",   # ✅ dynamic name
                 mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
         elif file_type == "pdf":
@@ -512,4 +539,4 @@ def submit():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True) # production
-    #app.run(host="127.0.0.1", port=5000, debug=True) # local testing
+    # app.run(host="127.0.0.1", port=5000, debug=True) # local testing
