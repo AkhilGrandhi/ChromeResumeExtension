@@ -5,3 +5,4 @@ reportlab
 openai
 fpdf
 gunicorn
+docx2pdf
