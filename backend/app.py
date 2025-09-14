@@ -6,6 +6,8 @@ import re
 import traceback
 import os
 
+
+
 # ------- Word (python-docx) -------
 from docx import Document
 from docx.shared import Pt, Inches
@@ -16,10 +18,10 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 
 # ------- PDF (reportlab) -------
-from reportlab.lib.pagesizes import LETTER
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, ListFlowable, ListItem
-from reportlab.lib.units import inch
+from docx2pdf import convert
+import tempfile
+import os
+from io import BytesIO
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -344,63 +346,33 @@ def create_resume_word(content: str) -> Document:
 
 
 # ---- PDF generator ----
-def create_resume_pdf(content: str) -> BytesIO:
-    buf = BytesIO()
-    doc = SimpleDocTemplate(
-        buf, pagesize=LETTER,
-        leftMargin=0.5*inch, rightMargin=0.5*inch,
-        topMargin=0.5*inch, bottomMargin=0.5*inch
-    )
-    styles = getSampleStyleSheet()
+def create_resume_pdf(resume_text: str) -> BytesIO:
+    """
+    Generate resume as PDF by first creating a Word doc and then converting.
+    """
+    # 1. Create Word doc
+    doc = create_resume_word(resume_text)
 
-    title_style = ParagraphStyle("TitleCenter", parent=styles["Heading1"], alignment=1, fontSize=18, leading=22, spaceAfter=6)
-    contact_style = ParagraphStyle("Contact", parent=styles["Normal"], alignment=1, fontSize=10, leading=14, spaceAfter=2)
-    section_style = ParagraphStyle("Section", parent=styles["Heading2"], fontSize=13, leading=16, spaceBefore=6, spaceAfter=4)
-    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=11, leading=15, spaceAfter=4)
-    bullet_style = ParagraphStyle("Bullet", parent=styles["Normal"], fontSize=11, leading=15, leftIndent=20, bulletIndent=10, spaceAfter=2)
+    # 2. Save Word doc into a temp file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp_docx:
+        doc.save(tmp_docx.name)
+        tmp_docx_path = tmp_docx.name
 
-    story = []
-    lines = [ln.strip() for ln in content.splitlines() if ln is not None]
+    # 3. Convert to PDF (saved in same temp dir)
+    tmp_pdf_path = tmp_docx_path.replace(".docx", ".pdf")
+    convert(tmp_docx_path, tmp_pdf_path)
 
-    i = 0
-    while i < len(lines) and not lines[i]:
-        i += 1
-    if i < len(lines):
-        story.append(Paragraph(lines[i], title_style))
-        i += 1
+    # 4. Load PDF into memory (BytesIO) so Flask can return it
+    pdf_buffer = BytesIO()
+    with open(tmp_pdf_path, "rb") as f:
+        pdf_buffer.write(f.read())
+    pdf_buffer.seek(0)
 
-    contact_added = 0
-    while i < len(lines) and contact_added < 4 and is_contact_line(lines[i]):
-        if lines[i]:
-            story.append(Paragraph(lines[i], contact_style))
-            contact_added += 1
-        i += 1
-    story.append(Spacer(1, 6))
+    # 5. Cleanup temp files
+    os.remove(tmp_docx_path)
+    os.remove(tmp_pdf_path)
 
-    while i < len(lines):
-        line = lines[i]
-        if not line:
-            story.append(Spacer(1, 4))
-            i += 1
-            continue
-        if is_section_title(line):
-            story.append(Paragraph(line.rstrip(":"), section_style))
-            story.append(HRFlowable(width="100%", thickness=0.6, color="#000000", spaceBefore=4, spaceAfter=6))
-            i += 1
-            continue
-        if line.startswith("- "):
-            bullets = []
-            while i < len(lines) and lines[i].startswith("- "):
-                bullets.append(lines[i][2:])
-                i += 1
-            story.append(ListFlowable([ListItem(Paragraph(b, bullet_style)) for b in bullets], bulletType="bullet"))
-            continue
-        story.append(Paragraph(line, body_style))
-        i += 1
-
-    doc.build(story)
-    buf.seek(0)
-    return buf
+    return pdf_buffer
 
 # ---- API endpoint ----
 @app.route("/submit", methods=["POST"])
@@ -532,7 +504,6 @@ def submit():
     # ✅ Extract candidate name (first line of resume_text)
     candidate_name = resume_text.splitlines()[0].strip()
     safe_name = re.sub(r'[^A-Za-z0-9]+', '_', candidate_name)  # replace spaces & symbols
-    print("Candidate Name:", candidate_name, "-> Safe Name:", safe_name)
 
     try:
         if file_type == "word":
@@ -557,4 +528,4 @@ def submit():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True) # production
-    #app.run(host="127.0.0.1", port=5000, debug=True) # local testing
+    # app.run(host="127.0.0.1", port=5000, debug=True) # local testing
