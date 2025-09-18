@@ -5,7 +5,6 @@ from io import BytesIO
 import re
 import traceback
 import os
-from datetime import datetime
 
 
 
@@ -19,10 +18,15 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 
 # ------- PDF (reportlab) -------
-from docx2pdf import convert
-import tempfile
 import os
+import tempfile
 from io import BytesIO
+import subprocess
+from docx import Document
+import platform
+
+from datetime import datetime
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -377,34 +381,52 @@ def create_resume_word(content: str) -> Document:
     return doc
 
 
-# ---- PDF generator ----
+
 def create_resume_pdf(resume_text: str) -> BytesIO:
-    """
-    Generate resume as PDF by first creating a Word doc and then converting.
-    """
-    # 1. Create Word doc
+    # Step 1: Create Word doc
+    tmp_docx = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
     doc = create_resume_word(resume_text)
+    doc.save(tmp_docx.name)
 
-    # 2. Save Word doc into a temp file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp_docx:
-        doc.save(tmp_docx.name)
-        tmp_docx_path = tmp_docx.name
+    # Step 2: Prepare PDF path
+    tmp_pdf_path = os.path.splitext(tmp_docx.name)[0] + ".pdf"
 
-    # 3. Convert to PDF (saved in same temp dir)
-    tmp_pdf_path = tmp_docx_path.replace(".docx", ".pdf")
-    convert(tmp_docx_path, tmp_pdf_path)
+    # Step 3: Determine LibreOffice executable path
+    system = platform.system()
+    if system == "Windows":
+        # Change this path if LibreOffice installed elsewhere
+        soffice_path = r"C:\Program Files\LibreOffice\program\soffice.exe"
+    else:
+        soffice_path = "libreoffice"  # Linux / Mac assumes in PATH
 
-    # 4. Load PDF into memory (BytesIO) so Flask can return it
-    pdf_buffer = BytesIO()
+    # Step 4: Convert DOCX -> PDF
+    try:
+        subprocess.run([
+            soffice_path,
+            "--headless",
+            "--convert-to", "pdf",
+            tmp_docx.name,
+            "--outdir", os.path.dirname(tmp_pdf_path)
+        ], check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"LibreOffice PDF conversion failed: {e}")
+    except FileNotFoundError:
+        raise RuntimeError(f"LibreOffice not found at {soffice_path}. Install it or update the path.")
+
+    # Step 5: Read PDF
     with open(tmp_pdf_path, "rb") as f:
-        pdf_buffer.write(f.read())
-    pdf_buffer.seek(0)
+        pdf_bytes = BytesIO(f.read())
 
-    # 5. Cleanup temp files
-    os.remove(tmp_docx_path)
-    os.remove(tmp_pdf_path)
+    # Step 6: Cleanup
+    try:
+        os.remove(tmp_docx.name)
+        os.remove(tmp_pdf_path)
+    except OSError:
+        pass
 
-    return pdf_buffer
+    pdf_bytes.seek(0)
+    return pdf_bytes
+
 
 # ---- API endpoint ----
 @app.route("/submit", methods=["POST"])
@@ -439,6 +461,7 @@ def submit():
             - Do not infer, estimate, or change the experience from the Job Description or any other source.  
             - The remaining bullet points (5–7) must highlight key skills, achievements, career highlights, and qualifications aligned with the Job Description.  
             - Each bullet must start with "- ".  
+
 
         2. **SKILLS** – Based on the Job Description and Candidate Information:
 
@@ -480,6 +503,7 @@ def submit():
 
 
         3. **WORK EXPERIENCE** – Merge **Work History** and **Work Experience** into a unified section. For each job role:
+            - ⚠️ IMPORTANT: Use WORK EXPERIENCE from the CANDIDATE INFORMATION only
             - Include the Job Title, Company Name (bold), Job Location, and timeline using the format:
                 [Company Name] – [Job Location]  
                 [Job Title] – [Start Month Year] to [End Month Year]
