@@ -292,7 +292,15 @@ def add_summary_section(doc, lines, idx):
 
     return idx
 
-
+def extract_work_experience_string(candidate_info: str) -> str:
+    # Use regex to capture everything from "Role:" up to the next blank line or end of string, repeated for each job
+    pattern = re.compile(r"(Role:.*?(?:\n|$)(?:Company:.*?(?:\n|$))?(?:Location:.*?(?:\n|$))?(?:Duration:.*?(?:\n|$)))", re.DOTALL)
+    
+    matches = pattern.findall(candidate_info)
+    
+    # Join all matched work history blocks with double newlines for readability
+    work_exp_str = "\n\n".join(match.strip() for match in matches)
+    return work_exp_str
 
 # ---- Main Word generator ----
 def create_resume_word(content: str) -> Document:
@@ -386,6 +394,8 @@ def submit():
     candidate_info = (data or {}).get("candidate_info", "").strip()
     file_type = (data or {}).get("file_type", "word").strip().lower()
 
+    work_exp_str = extract_work_experience_string(candidate_info)
+
     if not job_desc or not candidate_info:
         return jsonify({"message": "Missing required fields"}), 400
 
@@ -398,8 +408,16 @@ def submit():
 
         SECTION ORDER:
 
-        1. **PROFESSIONAL SUMMARY** – Include **6 to 8 bullet points. Each must start with "- "** summarizing key skills, achievements, career highlights, and qualifications aligned with the job description. 
-        ⚠️ The **total years of experience must always be taken directly from Candidate Information** (do not infer or change it).
+        1. **PROFESSIONAL SUMMARY** – Include **6 to 8 bullet points**.  
+            - The **first bullet point must always mention the candidate’s total years of professional experience**, calculated as the time difference between the **earliest job start date** found in the CANDIDATE INFORMATION and **today’s current date (month and year)**, regardless of any "Present" or similar placeholders.  
+            CANDIDATE INFORMATION:  
+            {work_exp_str}  
+ 
+
+            - Represent the total as “X+ years of experience” (e.g., 5+ years, 6+ years), based **strictly on the earliest start date and the latest end year found in the CANDIDATE INFORMATION**, ignoring any "Present" or current date mentions.  
+            - Do not infer, estimate, or change the experience from the Job Description or any other source.  
+            - The remaining bullet points (5–7) must highlight key skills, achievements, career highlights, and qualifications aligned with the Job Description.  
+            - Each bullet must start with "- ".  
 
         2. **SKILLS** – Based on the Job Description and Candidate Information:
 
