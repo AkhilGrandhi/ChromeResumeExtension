@@ -398,7 +398,8 @@ def submit():
 
         SECTION ORDER:
 
-        1. **PROFESSIONAL SUMMARY** – Include **6 to 8 bullet points. Each must start with "- "** summarizing key skills, achievements, career highlights, and qualifications aligned with the job description.
+        1. **PROFESSIONAL SUMMARY** – Include **6 to 8 bullet points. Each must start with "- "** summarizing key skills, achievements, career highlights, and qualifications aligned with the job description. 
+        ⚠️ The **total years of experience must always be taken directly from Candidate Information** (do not infer or change it).
 
         2. **SKILLS** – Based on the Job Description and Candidate Information:
 
