@@ -5,6 +5,7 @@ from io import BytesIO
 import re
 import traceback
 import os
+from datetime import datetime
 
 
 
@@ -292,15 +293,38 @@ def add_summary_section(doc, lines, idx):
 
     return idx
 
-def extract_work_experience_string(candidate_info: str) -> str:
-    # Use regex to capture everything from "Role:" up to the next blank line or end of string, repeated for each job
-    pattern = re.compile(r"(Role:.*?(?:\n|$)(?:Company:.*?(?:\n|$))?(?:Location:.*?(?:\n|$))?(?:Duration:.*?(?:\n|$)))", re.DOTALL)
-    
-    matches = pattern.findall(candidate_info)
-    
-    # Join all matched work history blocks with double newlines for readability
-    work_exp_str = "\n\n".join(match.strip() for match in matches)
-    return work_exp_str
+
+def extract_work_experience(candidate_info: str) -> list[str]:
+    # Normalize all dashes to a hyphen
+    candidate_info = candidate_info.replace("–", "-").replace("—", "-")
+
+    # Extract all 'Duration:' lines
+    duration_lines = re.findall(r"Duration:\s*(.+)", candidate_info, re.IGNORECASE)
+
+    # Extract the start date (Month Year before dash or 'to')
+    start_dates = []
+    print(duration_lines)
+    for line in duration_lines:
+        match = re.match(r"([A-Za-z]+\s+\d{4})", line.strip())
+        if match:
+            start_dates.append(match.group(1))
+
+    min_date = min(datetime.strptime(d, "%b %Y") for d in start_dates).strftime("%B %Y")
+    # print("Min", min_date)
+
+    # ✅ Line 1: Get today's date
+    max_date = datetime.today().strftime("%B %Y")
+
+    # ✅ Line 2: Calculate difference in years and months
+    min_dt = datetime.strptime(min_date, "%B %Y")
+    max_dt = datetime.strptime(max_date, "%B %Y")
+    years = max_dt.year - min_dt.year
+    months = max_dt.month - min_dt.month
+    if months < 0:
+        years -= 1
+        months += 12
+    return(f"Total Experience: {years} years and {months} months")
+
 
 # ---- Main Word generator ----
 def create_resume_word(content: str) -> Document:
@@ -394,7 +418,7 @@ def submit():
     candidate_info = (data or {}).get("candidate_info", "").strip()
     file_type = (data or {}).get("file_type", "word").strip().lower()
 
-    work_exp_str = extract_work_experience_string(candidate_info)
+    work_exp_str = extract_work_experience(candidate_info)
 
     if not job_desc or not candidate_info:
         return jsonify({"message": "Missing required fields"}), 400
@@ -409,11 +433,8 @@ def submit():
         SECTION ORDER:
 
         1. **PROFESSIONAL SUMMARY** – Include **6 to 8 bullet points**.  
-            - The **first bullet point must always mention the candidate’s total years of professional experience**, calculated as the time difference between the **earliest job start date** found in the CANDIDATE INFORMATION and **today’s current date (month and year)**, regardless of any "Present" or similar placeholders.  
-            CANDIDATE INFORMATION:  
-            {work_exp_str}  
- 
-
+            - The **first bullet point must always mention the candidate’s total years of professional experience**
+            WORK Experience: {work_exp_str}  
             - Represent the total as “X+ years of experience” (e.g., 5+ years, 6+ years), based **strictly on the earliest start date and the latest end year found in the CANDIDATE INFORMATION**, ignoring any "Present" or current date mentions.  
             - Do not infer, estimate, or change the experience from the Job Description or any other source.  
             - The remaining bullet points (5–7) must highlight key skills, achievements, career highlights, and qualifications aligned with the Job Description.  
