@@ -298,36 +298,52 @@ def add_summary_section(doc, lines, idx):
     return idx
 
 
-def extract_work_experience(candidate_info: str) -> list[str]:
-    # Normalize all dashes to a hyphen
+
+def extract_total_experience(candidate_info: str) -> str:
+    # Normalize dashes
     candidate_info = candidate_info.replace("–", "-").replace("—", "-")
 
-    # Extract all 'Duration:' lines
+    # Extract all duration lines
     duration_lines = re.findall(r"Duration:\s*(.+)", candidate_info, re.IGNORECASE)
 
-    # Extract the start date (Month Year before dash or 'to')
-    start_dates = []
-    print(duration_lines)
+    total_months = 0
+    today = datetime.today()
+
     for line in duration_lines:
-        match = re.match(r"([A-Za-z]+\s+\d{4})", line.strip())
-        if match:
-            start_dates.append(match.group(1))
+        # Split into start and end
+        parts = [p.strip() for p in line.split("-")]
+        if len(parts) != 2:
+            continue
+        
+        start_str, end_str = parts
 
-    min_date = min(datetime.strptime(d, "%b %Y") for d in start_dates).strftime("%B %Y")
-    # print("Min", min_date)
+        # Parse start date
+        try:
+            start_date = datetime.strptime(start_str, "%b %Y")
+        except ValueError:
+            start_date = datetime.strptime(start_str, "%B %Y")
 
-    # ✅ Line 1: Get today's date
-    max_date = datetime.today().strftime("%B %Y")
+        # Handle "Present"
+        if "present" in end_str.lower():
+            end_date = today
+        else:
+            try:
+                end_date = datetime.strptime(end_str, "%b %Y")
+            except ValueError:
+                end_date = datetime.strptime(end_str, "%B %Y")
 
-    # ✅ Line 2: Calculate difference in years and months
-    min_dt = datetime.strptime(min_date, "%B %Y")
-    max_dt = datetime.strptime(max_date, "%B %Y")
-    years = max_dt.year - min_dt.year
-    months = max_dt.month - min_dt.month
-    if months < 0:
-        years -= 1
-        months += 12
-    return(f"Total Experience: {years} years and {months} months")
+        # Calculate duration in months
+        months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
+        total_months += months
+
+        # Print each duration separately
+        years, m = divmod(months, 12)
+        # print(f"{start_str} – {end_str}: {years} years {m} months")
+
+    # Convert total months into years+months
+    total_years, total_m = divmod(total_months, 12)
+    # print(f"Total Experience: {total_years} years {total_m} months")
+    return f"Total Experience: {total_years} years {total_m} months"
 
 
 # ---- Main Word generator ----
@@ -440,7 +456,7 @@ def submit():
     candidate_info = (data or {}).get("candidate_info", "").strip()
     file_type = (data or {}).get("file_type", "word").strip().lower()
 
-    work_exp_str = extract_work_experience(candidate_info)
+    work_exp_str = extract_total_experience(candidate_info)
 
     if not job_desc or not candidate_info:
         return jsonify({"message": "Missing required fields"}), 400
