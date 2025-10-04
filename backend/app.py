@@ -518,7 +518,7 @@ def submit():
 
 
 
-        3. **WORK EXPERIENCE** – Merge **Work History** and **Work Experience** into a unified section. For each job role:
+        **WORK EXPERIENCE** – Merge **Work History** and **Work Experience** into a unified section. For each job role:
             - ⚠️ IMPORTANT: Use WORK EXPERIENCE from the CANDIDATE INFORMATION only
             - Include the Job Title, Company Name (bold), Job Location, and timeline using the format:
                 [Company Name] – [Job Location]  
@@ -532,7 +532,8 @@ def submit():
                 - Highlight **leadership, innovation, automation, and cross-functional collaboration**.
                 - Showcase **modern practices** (e.g., Cloud Migration, DevOps, CI/CD automation, Data Engineering, AI/ML, Security, Scalability).
                 - Ensure all points are **specific, technical, and results-driven**, not generic.
-            - Ensure the **total number of bullet points across all roles is between 35 and 45**.
+            - Ensure the **total number of bullet points across all roles is between 35 and 45 each bullet point must be longer like 2 lines**.
+            - ⚠️ IMPORTANT: Each bullet must be 2 lines long to ensure it is detailed but not overly verbose.
             - End each job section with a line:  
                 **Technologies Used:** tech1, tech2, ..., tech15  
                 ⚠️ Each role must include **10 to 15 technologies** mapped directly from the SKILLS section.  
