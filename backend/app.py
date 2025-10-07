@@ -535,6 +535,7 @@ def submit():
             ⚠️ IMPORTANT: Each bullet point must be exactly 3 lines long, with rich and specific details — include technologies used, metrics, project outcomes, team collaboration, challenges faced, and business impact.
                 - The total number of bullet points across all roles must be between 35 and 45, with no filler or repetition. Each point should offer unique, concrete contributions or achievements.
                 - Write in professional resume tone, use strong action verbs, and focus on clarity, impact, and relevance to technical or engineering roles.
+            - End each job section with a line:  
                 **Technologies Used:** tech1, tech2, ..., tech15  
                 ⚠️ Each role must include **10 to 15 technologies** mapped directly from the SKILLS section.  
                 ⚠️ When combining all roles, the **union of technologies must comprehensively cover the entire SKILLS section**.
