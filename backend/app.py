@@ -532,9 +532,9 @@ def submit():
                 - Highlight **leadership, innovation, automation, and cross-functional collaboration**.
                 - Showcase **modern practices** (e.g., Cloud Migration, DevOps, CI/CD automation, Data Engineering, AI/ML, Security, Scalability).
                 - Ensure all points are **specific, technical, and results-driven**, not generic.
-            - Ensure the **total number of bullet points across all roles is between 35 and 45 each bullet point must be longer like 3 lines**.
-            - ⚠️ IMPORTANT: Each bullet must be 3 lines long to ensure it is detailed but not overly verbose.
-            - End each job section with a line:  
+            ⚠️ IMPORTANT: Each bullet point must be exactly 3 lines long, with rich and specific details — include technologies used, metrics, project outcomes, team collaboration, challenges faced, and business impact.
+                - The total number of bullet points across all roles must be between 35 and 45, with no filler or repetition. Each point should offer unique, concrete contributions or achievements.
+                - Write in professional resume tone, use strong action verbs, and focus on clarity, impact, and relevance to technical or engineering roles.
                 **Technologies Used:** tech1, tech2, ..., tech15  
                 ⚠️ Each role must include **10 to 15 technologies** mapped directly from the SKILLS section.  
                 ⚠️ When combining all roles, the **union of technologies must comprehensively cover the entire SKILLS section**.
