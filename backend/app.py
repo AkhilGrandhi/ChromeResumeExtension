@@ -523,13 +523,15 @@ def submit():
             [Job Title] – [Start Month Year] to [End Month Year]
 
         - Add 10 to 15 high-impact bullet points per role. Each bullet point must:
+        - Each bullet point must be exactly 2 lines long, with rich and specific details — including technologies used, metrics, project outcomes, team collaboration, challenges faced, and business impact.
+        - "When generating points for each company, first identify the industry it operates in, and then tailor the points to be relevant to that specific industry projects.
         - Start with a strong action verb (e.g., Spearheaded, Engineered, Optimized, Automated, Delivered).
         - Focus on achievements, measurable outcomes, and business value rather than just responsibilities.
         - Include quantifiable results wherever possible (e.g., improved ETL performance by 35%, reduced deployment time by 40%, cut costs by 20% annually).
         - Highlight leadership, innovation, automation, and cross-functional collaboration.
         - Showcase modern practices (e.g., Cloud Migration, DevOps, CI/CD automation, Data Engineering, AI/ML, Security, Scalability).
         - Be specific, technical, and results-driven — not generic.
-        - Each bullet point must be exactly 2 lines long, with rich and specific details — including technologies used, metrics, project outcomes, team collaboration, challenges faced, and business impact.
+        
 
         - ⚠️ Validate technology usage against the job timeline:
         - ONLY include technologies, tools, frameworks, or platforms that were **publicly available and in practical use** during the given employment period.
@@ -541,6 +543,9 @@ def submit():
         - For 2 companies: 15 to 20 bullet points each (total: 30-40 points).
         - For 3 companies: 10 to 15 bullet points each (total: 30-45 points).
         - For 4 companies: 10 to 15 bullet points each (total: 40-60 points).
+        - For 5 companies: 10 to 15 bullet points each (total: 60-70 points).
+        - For 6 companies: 10 to 15 bullet points each (total: 70-80 points).
+        - For 7 companies: 10 to 15 bullet points each (total: 70-80 points).
 
         - No filler or repetition: Each bullet point must offer unique, concrete contributions or achievements.
 
