@@ -471,11 +471,11 @@ def submit():
         SECTION ORDER:
 
         1. **PROFESSIONAL SUMMARY** – Include **6 to 8 bullet points**.  
-            - The **first bullet point must always mention the candidate's total years of professional experience**
-            WORK Experience: {work_exp_str}  
+            - The first bullet point under WORK EXPERIENCE must always mention the candidate's total years of professional experience. If this information is available in the JOB DESCRIPTION, use the role mentioned there when framing the experience.
+              WORK EXPERIENCE: {work_exp_str}
             - Represent the total as "X+ years of experience" (e.g., 5+ years, 6+ years), based **strictly on the earliest start date and the latest end year found in the CANDIDATE INFORMATION**, ignoring any "Present" or current date mentions.  
             - Do not infer, estimate, or change the experience from the Job Description or any other source.  
-            - The remaining 2 liner detailed bullet points (5–7) must highlight key skills, achievements, career highlights, and qualifications aligned with the Job Description.  
+            - The remaining 2 liner bullet points (5–7) must highlight key skills, achievements, career highlights, and qualifications aligned with the Job Description.  
             - Each bullet must start with "- ".  
 
         2. **SKILLS** – Based on the Job Description and Candidate Information:
@@ -519,7 +519,20 @@ def submit():
 
         3. **CERTIFICATIONS**
 
-        4. **EDUCATION**
+        4. **EDUCATION** 
+            Format the education section clearly and consistently using the structure shown below. 
+
+            Example Format:
+                MS in Computer Science
+                University of XYZ, USA | GPA: 3.8/4.0
+                B.Tech in Computer Science Engineering
+                JNTU Hyderabad | Percentage: 85%
+
+            Make sure the formatting follows this structure exactly:
+            [Degree] in [Field of Study]
+            [University Name] | [GPA or Percentage]
+
+            Do not include additional details like thesis titles, coursework, or graduation years unless specifically asked.
         
         ⚠️ IMPORTANT: Do NOT generate the WORK EXPERIENCE section. It will be added separately.
 
