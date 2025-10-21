@@ -475,7 +475,7 @@ def submit():
               WORK EXPERIENCE: {work_exp_str}
             - Represent the total as "X+ years of experience" (e.g., 5+ years, 6+ years), based **strictly on the earliest start date and the latest end year found in the CANDIDATE INFORMATION**, ignoring any "Present" or current date mentions.  
             - Do not infer, estimate, or change the experience from the Job Description or any other source.  
-            - The remaining 2 liner bullet points (5–7) must highlight key skills, achievements, career highlights, and qualifications aligned with the Job Description.  
+            - The remaining 2 liner detailed bullet points (5–7) must highlight key skills, achievements, career highlights, and qualifications aligned with the Job Description.  
             - Each bullet must start with "- ".  
 
         2. **SKILLS** – Based on the Job Description and Candidate Information:
