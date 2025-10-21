@@ -473,9 +473,8 @@ def submit():
         1. **PROFESSIONAL SUMMARY** – Include **6 to 8 bullet points**.  
             - The first bullet point under WORK EXPERIENCE must always mention the candidate's total years of professional experience. If this information is available in the JOB DESCRIPTION, use the role mentioned there when framing the experience.
               WORK EXPERIENCE: {work_exp_str}
-            - Represent the total as "X+ years of experience" (e.g., 5+ years, 6+ years), based **strictly on the earliest start date and the latest end year found in the CANDIDATE INFORMATION**, ignoring any "Present" or current date mentions.  
-            - Do not infer, estimate, or change the experience from the Job Description or any other source.  
-            - The remaining 2 liner detailed bullet points (5–7) must highlight key skills, achievements, career highlights, and qualifications aligned with the Job Description.  
+            - Represent the total as "X+ years of experience" (e.g., 5+ years, 6+ years)
+            - The remaining 3 liner detailed bullet points (6–8) must highlight key skills, achievements, career highlights, and qualifications aligned with the Job Description.  
             - Each bullet must start with "- ".  
 
         2. **SKILLS** – Based on the Job Description and Candidate Information:
