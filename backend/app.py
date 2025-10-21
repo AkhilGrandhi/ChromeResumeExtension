@@ -557,7 +557,7 @@ def submit():
                 {"role": "system", "content": "You write polished, ATS-friendly resumes."},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.6,
+            temperature=0.3,
         )
         raw_resume = resp.choices[0].message.content or ""
 
@@ -619,7 +619,7 @@ def submit():
                 {"role": "system", "content": "You write only the Work Experience section for ATS resumes."},
                 {"role": "user", "content": exp_prompt},
             ],
-            temperature=0.6,
+            temperature=0.3,
         )
         exp_text = resp_exp.choices[0].message.content or ""
         
@@ -667,5 +667,5 @@ def submit():
         return jsonify({"message": f"File generation error: {e}"}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True) # production
+    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True) # production
     # app.run(host="127.0.0.1", port=5000, debug=True) # local testing
