@@ -6,6 +6,8 @@ import re
 import traceback
 import os
 
+
+
 # ------- Word (python-docx) -------
 from docx import Document
 from docx.shared import Pt, Inches
@@ -14,6 +16,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
+
 # ------- PDF (reportlab) -------
 import os
 import tempfile
@@ -21,7 +24,9 @@ from io import BytesIO
 import subprocess
 from docx import Document
 import platform
+
 from datetime import datetime
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -39,11 +44,11 @@ SECTION_TITLES = {
     "technical skills",
     "skills",
     "professional experience",
+    "education",
+    "certifications",
     "experience",
     "work experience",
     "work history",
-    "education",
-    "certifications",
     "projects",
     "additional qualifications",
     "additional information",
@@ -127,15 +132,19 @@ def add_contact_info(doc, lines, idx):
 
     return idx
 
+
 def add_section_title(doc, title, idx):
     p = doc.add_paragraph(title.upper().rstrip(":"))
-    p.paragraph_format.space_before = Pt(12)
-    p.paragraph_format.space_after = Pt(4)
+    p.paragraph_format.space_before = Pt(12)   # add spacing above the title
+    p.paragraph_format.space_after = Pt(4)     # small space below (optional)
+
     r = p.runs[0]
     r.bold = True
-    r.font.size = Pt(12)
+    r.font.size = Pt(12)                       # set font size to 12
+
     add_horizontal_rule(p)
     return idx + 1
+
 
 def add_skills_section(doc, lines, idx):
     idx = add_section_title(doc, lines[idx], idx)
@@ -183,6 +192,17 @@ def add_skills_section(doc, lines, idx):
 
     return idx
 
+
+    # flush last category
+    if category and skills:
+        p = doc.add_paragraph()
+        r1 = p.add_run(category + ": ")
+        r1.bold = True
+        r2 = p.add_run(", ".join(skills))
+
+    return idx
+
+
 def add_experience_section(doc, lines, idx):
     idx = add_section_title(doc, lines[idx], idx)
     company_seen = False  # track first company
@@ -196,11 +216,15 @@ def add_experience_section(doc, lines, idx):
                 run = p.runs[0]
                 run.bold = True
                 run.font.size = Pt(10)
+                # p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+                # ❌ No space above for role lines
             else:  # ✅ Company line
                 p = doc.add_paragraph(line)
                 run = p.runs[0]
                 run.bold = True
                 run.font.size = Pt(11)
+
+                # ✅ Add space above only for companies after the first one
                 if company_seen:
                     p.paragraph_format.space_before = Pt(10)
                 company_seen = True
@@ -215,17 +239,18 @@ def add_experience_section(doc, lines, idx):
                     bullet_para = doc.add_paragraph(part.strip(), style="List Bullet")
                     bullet_para.paragraph_format.left_indent = Inches(0.25)
 
-        elif line.startswith("- "):  # bullets with -
-            bullet_para = doc.add_paragraph(line[2:].strip(), style="List Bullet")
-            bullet_para.paragraph_format.left_indent = Inches(0.25)
-
         elif line.startswith("Technologies Used"):
             heading, _, techs = line.partition(":")
             p = doc.add_paragraph()
             r1 = p.add_run(heading.strip() + ": ")
             r1.bold = True
             p.add_run(techs.strip())
+            # ✅ Only spacing below (no space above)
             p.paragraph_format.space_after = Pt(10)
+
+        elif line.startswith("- "):  # bullets with -
+            bullet_para = doc.add_paragraph(line[2:].strip(), style="List Bullet")
+            bullet_para.paragraph_format.left_indent = Inches(0.25)
 
         else:
             doc.add_paragraph(line)
@@ -233,15 +258,16 @@ def add_experience_section(doc, lines, idx):
         idx += 1
     return idx
 
+
 def add_certifications_section(doc, lines, idx):
     idx = add_section_title(doc, lines[idx], idx)
     while idx < len(lines) and not is_section_title(lines[idx]):
-        line = lines[idx].lstrip("- ").strip()
+        line = lines[idx].lstrip("- ").strip()   # ✅ remove leading "-"
         if line:
-            # Use Word bullets (keep your formatting)
-            p = doc.add_paragraph(line, style="List Bullet")
+            doc.add_paragraph("• " + line)
         idx += 1
     return idx
+
 
 def add_education_section(doc, lines, idx):
     idx = add_section_title(doc, lines[idx], idx)
@@ -251,34 +277,53 @@ def add_education_section(doc, lines, idx):
     return idx
 
 def add_summary_section(doc, lines, idx):
-    idx = add_section_title(doc, lines[idx], idx)
+    idx = add_section_title(doc, lines[idx], idx)  # add "PROFESSIONAL SUMMARY"
+    
     while idx < len(lines) and not is_section_title(lines[idx]):
         line = lines[idx].strip()
         if not line:
             idx += 1
             continue
-        text = line[2:].strip() if line.startswith("- ") else line
+
+        # Always force bullet format (whether line starts with "- " or not)
+        if line.startswith("- "):
+            text = line[2:].strip()
+        else:
+            text = line
+
         bullet_para = doc.add_paragraph(text, style="List Bullet")
         bullet_para.paragraph_format.left_indent = Inches(0.25)
         idx += 1
+
     return idx
 
+
+
 def extract_total_experience(candidate_info: str) -> str:
+    # Normalize dashes
     candidate_info = candidate_info.replace("–", "-").replace("—", "-")
+
+    # Extract all duration lines
     duration_lines = re.findall(r"Duration:\s*(.+)", candidate_info, re.IGNORECASE)
+
     total_months = 0
     today = datetime.today()
 
     for line in duration_lines:
+        # Split into start and end
         parts = [p.strip() for p in line.split("-")]
         if len(parts) != 2:
             continue
+        
         start_str, end_str = parts
+
+        # Parse start date
         try:
             start_date = datetime.strptime(start_str, "%b %Y")
         except ValueError:
             start_date = datetime.strptime(start_str, "%B %Y")
 
+        # Handle "Present"
         if "present" in end_str.lower():
             end_date = today
         else:
@@ -287,13 +332,21 @@ def extract_total_experience(candidate_info: str) -> str:
             except ValueError:
                 end_date = datetime.strptime(end_str, "%B %Y")
 
+        # Calculate duration in months
         months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
         total_months += months
 
+        # Print each duration separately
+        years, m = divmod(months, 12)
+        # print(f"{start_str} – {end_str}: {years} years {m} months")
+
+    # Convert total months into years+months
     total_years, total_m = divmod(total_months, 12)
     print(f"Total Experience: {total_years} years {total_m} months")
     return f"Total Experience: {total_years} years {total_m} months"
 
+
+# ---- Main Word generator ----
 def create_resume_word(content: str) -> Document:
     doc = Document()
     for section in doc.sections:
@@ -306,6 +359,7 @@ def create_resume_word(content: str) -> Document:
     font = style.font
     font.name = 'Calibri'
     font.size = Pt(11)
+    # 👉 Add this block
     para_format = style.paragraph_format
     para_format.space_after = Pt(0)
     para_format.space_before = Pt(0)
@@ -326,7 +380,7 @@ def create_resume_word(content: str) -> Document:
         if is_section_title(lines[idx]):
             section_key = lines[idx].strip().rstrip(":").lower()
             if section_key in ("professional summary", "summary"):
-                idx = add_summary_section(doc, lines, idx)
+                idx = add_summary_section(doc, lines, idx)   # ✅ FIXED
             elif section_key in ("skills", "technical skills"):
                 idx = add_skills_section(doc, lines, idx)
             elif section_key in ("work experience", "professional experience"):
@@ -342,18 +396,26 @@ def create_resume_word(content: str) -> Document:
 
     return doc
 
+
+
 def create_resume_pdf(resume_text: str) -> BytesIO:
+    # Step 1: Create Word doc
     tmp_docx = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
     doc = create_resume_word(resume_text)
     doc.save(tmp_docx.name)
 
+    # Step 2: Prepare PDF path
     tmp_pdf_path = os.path.splitext(tmp_docx.name)[0] + ".pdf"
+
+    # Step 3: Determine LibreOffice executable path
     system = platform.system()
     if system == "Windows":
+        # Change this path if LibreOffice installed elsewhere
         soffice_path = r"C:\Program Files\LibreOffice\program\soffice.exe"
     else:
-        soffice_path = "libreoffice"
+        soffice_path = "libreoffice"  # Linux / Mac assumes in PATH
 
+    # Step 4: Convert DOCX -> PDF
     try:
         subprocess.run([
             soffice_path,
@@ -367,9 +429,11 @@ def create_resume_pdf(resume_text: str) -> BytesIO:
     except FileNotFoundError:
         raise RuntimeError(f"LibreOffice not found at {soffice_path}. Install it or update the path.")
 
+    # Step 5: Read PDF
     with open(tmp_pdf_path, "rb") as f:
         pdf_bytes = BytesIO(f.read())
 
+    # Step 6: Cleanup
     try:
         os.remove(tmp_docx.name)
         os.remove(tmp_pdf_path)
@@ -378,29 +442,6 @@ def create_resume_pdf(resume_text: str) -> BytesIO:
 
     pdf_bytes.seek(0)
     return pdf_bytes
-
-# ----------------------------
-# Helpers for merging sections
-# ----------------------------
-
-def _ensure_title(text: str) -> str:
-    """Normalize section titles to match your detector and renderer."""
-    # Make sure common titles are uppercase and standalone lines
-    return re.sub(r"\b(work experience)\b", "WORK EXPERIENCE", text, flags=re.IGNORECASE)
-
-def _insert_before_section(base_text: str, insert_title: str, insert_block: str) -> str:
-    """
-    Insert `insert_block` before the first occurrence of `insert_title`
-    (title should be exact like 'CERTIFICATIONS' or 'EDUCATION'). 
-    If not found, return base_text + insert_block at the end.
-    """
-    pattern = rf"(^|\n){re.escape(insert_title)}\s*\n"
-    m = re.search(pattern, base_text)
-    if m:
-        pos = m.start()
-        return base_text[:pos].rstrip() + "\n\n" + insert_block.strip() + "\n\n" + base_text[pos:].lstrip()
-    # fallback append
-    return base_text.rstrip() + "\n\n" + insert_block.strip() + "\n"
 
 
 # ---- API endpoint ----
@@ -422,9 +463,7 @@ def submit():
 
     try:
         client = OpenAI(api_key=OPENAI_API_KEY)
-
-        # ----------- FIRST CALL (Header + Summary + Skills + Certifications + Education, NO Work Experience) -----------
-        main_prompt = f"""
+        prompt = f"""
         You are a professional resume writer. Using the Job Description and Candidate Information provided below, generate a clean, ATS-optimized resume that strictly follows the section order and formatting rules listed here:
 
         ⚠️ IMPORTANT: Output must contain the **resume only** — do not include explanations, disclaimers, notes, or extra text outside of the resume.
@@ -432,18 +471,17 @@ def submit():
         SECTION ORDER:
 
         1. **PROFESSIONAL SUMMARY** – Include **6 to 8 bullet points**.  
-            - The **first bullet point must always mention the candidate’s total years of professional experience**
+            - The **first bullet point must always mention the candidate's total years of professional experience**
             WORK Experience: {work_exp_str}  
-            - Represent the total as “X+ years of experience” (e.g., 5+ years, 6+ years), based **strictly on the earliest start date and the latest end year found in the CANDIDATE INFORMATION**, ignoring any "Present" or current date mentions.  
+            - Represent the total as "X+ years of experience" (e.g., 5+ years, 6+ years), based **strictly on the earliest start date and the latest end year found in the CANDIDATE INFORMATION**, ignoring any "Present" or current date mentions.  
             - Do not infer, estimate, or change the experience from the Job Description or any other source.  
             - The remaining bullet points (5–7) must highlight key skills, achievements, career highlights, and qualifications aligned with the Job Description.  
             - Each bullet must start with "- ".  
 
-
         2. **SKILLS** – Based on the Job Description and Candidate Information:
 
             1. Identify the **most relevant role/position** (e.g., .NET Developer, Java Backend Engineer, Salesforce Developer, Data Engineer, DevOps Engineer).
-            2. Create a **resume-ready Skills section** with **15–20 subsections**, tailored to that role and the JD.
+            2. Create a **resume-ready Skills section** with **10–12 subsections**, tailored to that role and the JD.
 
             ⚠️ RULES:
             - Subsections must be **category-based** and recruiter-friendly (e.g., Programming Languages, Frameworks & Libraries, Databases, Cloud Platforms, DevOps & CI/CD, Testing & QA, Security & Compliance, Monitoring & Observability, Collaboration Tools).
@@ -477,9 +515,13 @@ def submit():
             ⚠️ Ensure each subsection is **fully loaded with at least 8 skills** and contains **16–20 skills where possible**.
             ⚠️ All technologies listed here must also appear in the **Technologies Used** lines under the WORK EXPERIENCE section.
 
-        4. **CERTIFICATIONS**
 
-        5. **EDUCATION**
+
+        3. **CERTIFICATIONS**
+
+        4. **EDUCATION**
+        
+        ⚠️ IMPORTANT: Do NOT generate the WORK EXPERIENCE section. It will be added separately.
 
         FORMATTING RULES:
         - Display the candidate’s **Name** at the top.
@@ -497,30 +539,26 @@ def submit():
         CANDIDATE INFORMATION:
         {candidate_info}
         """
-
-        resp_main = client.chat.completions.create(  # <- fixed: chat.completions
+        resp = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You write polished, ATS-friendly resumes."},
-                {"role": "user", "content": main_prompt},
+                {"role": "user", "content": prompt},
             ],
             temperature=0.6,
         )
-        main_resume_text = resp_main.choices[0].message.content or ""
+        raw_resume = resp.choices[0].message.content or ""
 
-        # ----------- SECOND CALL (ONLY Work Experience Section) -----------
+
+         # ----------- SECOND CALL (ONLY Work Experience Section) -----------
         exp_prompt = f"""
         Generate ONLY the WORK EXPERIENCE section for this resume.
 
-        WORK EXPERIENCE – Merge WORK HISTORY and WORK EXPERIENCE into a unified section. For each job role:
-
-        - ⚠️ IMPORTANT: Use WORK EXPERIENCE from the CANDIDATE_INFORMATION only.
-        - For each job role, include:
-        - Job Title
-        - Company Name (bold)
-        - Job Location
-        - Timeline: Format as [Company Name] – [Job Location]  
-            [Job Title] – [Start Month Year] to [End Month Year]
+        3. **WORK EXPERIENCE** – Merge **Work History** and **Work Experience** into a unified section. For each job role:
+            - ⚠️ IMPORTANT: Use WORK EXPERIENCE from the CANDIDATE INFORMATION only
+            - Include the Job Title, Company Name (bold), Job Location, and timeline using the format:
+                [Company Name] – [Job Location]  
+                [Job Title] – [Start Month Year] to [End Month Year]
 
         - Add 10 to 15 high-impact bullet points per role. Each bullet point must:
         - Each bullet point must be exactly 2 lines long, with rich and specific details — including technologies used, metrics, project outcomes, team collaboration, challenges faced, and business impact.
@@ -563,7 +601,7 @@ def submit():
         {candidate_info}
         """
 
-        resp_exp = client.chat.completions.create(  # <- fixed: chat.completions
+        resp_exp = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You write only the Work Experience section for ATS resumes."},
@@ -572,32 +610,28 @@ def submit():
             temperature=0.6,
         )
         exp_text = resp_exp.choices[0].message.content or ""
-
-        # ----------- MERGE (Inject WORK EXPERIENCE before CERTIFICATIONS, else before EDUCATION, else append) -----------
-        main_resume_text = _ensure_title(main_resume_text)
         
-        merged = main_resume_text.strip()
-
-        if re.search(r"(^|\n)CERTIFICATIONS\s*\n", merged):
-            merged = _insert_before_section(merged, "CERTIFICATIONS", exp_text)
-        elif re.search(r"(^|\n)EDUCATION\s*\n", merged):
-            merged = _insert_before_section(merged, "EDUCATION", exp_text)
-        else:
-            merged = merged.rstrip() + "\n\n" + exp_text.strip() + "\n"
-
-        raw_resume = merged
-
+        # ✅ MERGE: Append Work Experience at the end
+        main_content = clean_markdown(raw_resume).strip()
+        work_exp_content = clean_markdown(exp_text).strip()
+        
+        # Ensure work experience has proper title
+        if work_exp_content and not work_exp_content.upper().startswith("WORK EXPERIENCE"):
+            work_exp_content = "WORK EXPERIENCE\n" + work_exp_content
+        
+        # Append Work Experience at the end (after Certifications and Education)
+        resume_text = main_content + "\n\n" + work_exp_content
+        
     except Exception as e:
         traceback.print_exc()
         return jsonify({"message": f"OpenAI error: {e}"}), 500
 
-    resume_text = clean_markdown(raw_resume).strip()
-
     if not resume_text:
         return jsonify({"message": "Resume generation failed: Empty response from AI"}), 500
-
+    
+    # ✅ Extract candidate name (first line of resume_text)
     candidate_name = resume_text.splitlines()[0].strip()
-    safe_name = re.sub(r'[^A-Za-z0-9]+', '_', candidate_name)
+    safe_name = re.sub(r'[^A-Za-z0-9]+', '_', candidate_name)  # replace spaces & symbols
 
     try:
         if file_type == "word":
@@ -608,12 +642,12 @@ def submit():
             return send_file(
                 buffer,
                 as_attachment=True,
-                download_name = safe_name + "_resume.docx",
+                download_name = safe_name + "_resume.docx",   # ✅ dynamic name
                 mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
         elif file_type == "pdf":
             buffer = create_resume_pdf(resume_text)
-            return send_file(buffer, as_attachment=True, download_name=safe_name + "_resume.pdf", mimetype="application/pdf")
+            return send_file(buffer, as_attachment=True, download_name="resume.pdf", mimetype="application/pdf")
         else:
             return jsonify({"message": "Invalid file_type"}), 400
     except Exception as e:
@@ -622,4 +656,4 @@ def submit():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True) # production
-    #app.run(host="127.0.0.1", port=5000, debug=True) # local testing
+    # app.run(host="127.0.0.1", port=5000, debug=True) # local testing
